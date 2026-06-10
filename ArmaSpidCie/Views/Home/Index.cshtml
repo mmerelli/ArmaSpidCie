@@ -1,0 +1,164 @@
+﻿@{
+    ViewData["Title"] = "Accedi";
+}
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accedi</title>
+    <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background: #f5f5f5;
+            }
+            .login-box {
+                background: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                width: 360px;
+            }
+            h1 { font-size: 24px; margin-bottom: 32px; color: #333; }
+
+            /* Bottone SPID */
+            .spid-wrapper {
+                position: relative;
+                width: 100%;
+                margin-bottom: 16px;
+            }
+            .spid-btn {
+                width: 100%;
+                padding: 12px 16px;
+                background: #06c;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .spid-btn:hover { background: #0055aa; }
+
+            /* Dropdown IdP */
+            .idp-dropdown {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 100;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            .idp-dropdown.open { display: block; }
+            .idp-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                cursor: pointer;
+                text-decoration: none;
+                color: #333;
+                font-size: 14px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .idp-item:last-child { border-bottom: none; }
+            .idp-item:hover { background: #f5f5f5; }
+            .idp-item img { width: 32px; height: 32px; object-fit: contain; }
+
+            /* Bottone CIE */
+            .cie-btn {
+                width: 100%;
+                padding: 12px 16px;
+                background: #008c50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+            }
+            .cie-btn:hover { background: #006a3c; }
+
+            .divider {
+                text-align: center;
+                margin: 20px 0;
+                color: #999;
+                font-size: 13px;
+                position: relative;
+            }
+            .divider::before, .divider::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                width: 42%;
+                height: 1px;
+                background: #ddd;
+            }
+            .divider::before { left: 0; }
+            .divider::after  { right: 0; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Accedi al servizio</h1>
+
+        <!-- Bottone SPID con dropdown degli IdP -->
+        <div class="spid-wrapper" id="spidWrapper">
+            <button class="spid-btn" type="button" onclick="toggleDropdown()">
+                <span>Entra con SPID</span>
+                <span>▾</span>
+            </button>
+
+            <div class="idp-dropdown" id="idpDropdown">
+                @foreach (var idp in ViewBag.SpidProviders)
+                {
+                    <a class="idp-item"
+                       href="/auth/spid/login?idp=@Uri.EscapeDataString(idp.EntityId)&returnUrl=@Uri.EscapeDataString(ViewBag.ReturnUrl ?? "/")">
+                        @if (!string.IsNullOrEmpty(idp.LogoUrl))
+                        {
+                            <img src="@idp.LogoUrl" alt="@idp.Name" />
+                        }
+                        <span>@idp.Name</span>
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="divider">oppure</div>
+
+        <!-- Bottone CIE -->
+        <a class="cie-btn"
+           href="/auth/cie/login?returnUrl=@Uri.EscapeDataString(ViewBag.ReturnUrl ?? "/")">
+            Entra con CIE
+        </a>
+    </div>
+
+    <script>
+            function toggleDropdown() {
+                document.getElementById('idpDropdown').classList.toggle('open');
+            }
+            document.addEventListener('click', function (e) {
+                if (!document.getElementById('spidWrapper').contains(e.target)) {
+                    document.getElementById('idpDropdown').classList.remove('open');
+                }
+            });
+    </script>
+</body>
+</html>

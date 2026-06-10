@@ -1,0 +1,6 @@
+@ArmaSpidCie_HostAddress = http://localhost:5075
+
+GET {{ArmaSpidCie_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
