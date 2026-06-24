@@ -130,7 +130,7 @@
                 @foreach (var idp in ViewBag.SpidProviders)
                 {
                     <a class="idp-item"
-                       href="/auth/spid/login?idp=@Uri.EscapeDataString(idp.EntityId)&returnUrl=@Uri.EscapeDataString(ViewBag.ReturnUrl ?? "/")">
+                       href="/spid/login?idp=@Uri.EscapeDataString(idp.EntityId)&returnUrl=@Uri.EscapeDataString(ViewBag.ReturnUrl ?? "/")">
                         @if (!string.IsNullOrEmpty(idp.LogoUrl))
                         {
                             <img src="@idp.LogoUrl" alt="@idp.Name" />
@@ -145,7 +145,7 @@
 
         <!-- Bottone CIE -->
         <a class="cie-btn"
-           href="/auth/cie/login?returnUrl=@Uri.EscapeDataString(ViewBag.ReturnUrl ?? "/")">
+           href="/cie/login?returnUrl=@Uri.EscapeDataString(ViewBag.ReturnUrl ?? "/")">
             Entra con CIE
         </a>
     </div>

@@ -29,6 +29,43 @@ namespace ArmaSpidCie.Controllers
 
             return View();                                              
         }
+
+        public async Task<IActionResult> Test()
+        {
+            var spidProvider = Resolve("spid") as SpidAuthProvider;
+            if (spidProvider is null) return NotFound($"Provider 'spid' non supportato.");
+
+            var _providers = await spidProvider.GetSpidProviders();
+
+            var model = new LoginViewModel
+            {
+                IdentityProviders = _providers
+                .Select(x => new IdentityProviderViewModel
+                {
+                    EntityId = x.EntityId,
+                    DisplayName = x.Name,
+                    Logo = x.LogoUrl
+                })
+                .ToList()
+            };
+
+            return View(model);
+        }
+    }
+
+
+
+
+    public class LoginViewModel
+    {
+        public List<IdentityProviderViewModel> IdentityProviders { get; set; }
+    }
+
+    public class IdentityProviderViewModel
+    {
+        public string EntityId { get; set; }
+        public string DisplayName { get; set; }
+        public string Logo { get; set; }
     }
 }
  

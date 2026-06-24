@@ -1,10 +1,8 @@
 using ArmaSpidCie.Configuration;
 using ArmaSpidCie.Models;
-using ArmaSpidCie.Services;
 using ITfoxtec.Identity.Saml2;
 using ITfoxtec.Identity.Saml2.MvcCore;
 using ITfoxtec.Identity.Saml2.Schemas;
-using ITfoxtec.Identity.Saml2.Schemas.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography.X509Certificates;
@@ -250,11 +248,7 @@ public class CieAuthProvider : IFederatedAuthProvider
 
     private Saml2Configuration BuildSamlConfig()
     {
-        var certPath = Path.Combine(AppContext.BaseDirectory, _config.CertificatePath);
-        var cert = X509CertificateLoader.LoadPkcs12FromFile(
-                certPath,
-                _config.CertificatePassword,
-                X509KeyStorageFlags.MachineKeySet);
+        var cert = CertificateHelper.Get(_config);
 
         var cfg = new Saml2Configuration
         {
@@ -265,8 +259,7 @@ public class CieAuthProvider : IFederatedAuthProvider
             SignatureAlgorithm = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
             SignAuthnRequest = true,    
 
-            CertificateValidationMode =
-            System.ServiceModel.Security.X509CertificateValidationMode.None,
+            CertificateValidationMode = System.ServiceModel.Security.X509CertificateValidationMode.None,
             RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck,
 
             AudienceRestricted = true,

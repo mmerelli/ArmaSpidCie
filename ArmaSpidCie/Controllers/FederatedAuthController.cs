@@ -11,23 +11,20 @@ namespace ArmaSpidCie.Controllers;
 
 /// <summary>
 /// Controller unico per SPID e CIE.
-/// Route: /auth/{provider}/...   (provider = "spid" | "cie")
+/// Route: /{provider}/...   (provider = "spid" | "cie")
 ///
 /// NOTA: CreateSessionAsync (chiamata nei provider) gestisce il cookie di autenticazione
 /// direttamente tramite HttpContext — il controller non chiama SignInAsync separatamente.
 /// </summary>
 [ApiController]
-[Route("auth/{provider}")]
+[Route("{provider}")]
 public class FederatedAuthController : Controller
 {
     private readonly IEnumerable<IFederatedAuthProvider> _providers;
     private readonly ILogger<FederatedAuthController> _logger;
     private readonly SpidConfig _spidConfig;
     
-    public FederatedAuthController(
-        IEnumerable<IFederatedAuthProvider> providers,
-        ILogger<FederatedAuthController> logger,
-        IOptions<SpidConfig> spidConfig)
+    public FederatedAuthController(IEnumerable<IFederatedAuthProvider> providers, ILogger<FederatedAuthController> logger, IOptions<SpidConfig> spidConfig)
     {
         _providers = providers;
         _logger = logger;
@@ -51,8 +48,8 @@ public class FederatedAuthController : Controller
 
     // ─── Login ────────────────────────────────────────────────────────────────
 
-    /// GET /auth/spid/login?idp=https://posteid.poste.it&returnUrl=/dashboard
-    /// GET /auth/cie/login?returnUrl=/dashboard
+    /// GET /spid/login?idp=https://posteid.poste.it&returnUrl=/dashboard
+    /// GET /cie/login?returnUrl=/dashboard
     [AllowAnonymous]
     [HttpGet("login")]
     public IActionResult Login(string provider, string returnUrl = "/", string? idp = null)
@@ -66,8 +63,8 @@ public class FederatedAuthController : Controller
 
     // ─── ACS ─────────────────────────────────────────────────────────────────
 
-    /// POST /auth/spid/acs
-    /// POST /auth/cie/acs
+    /// POST /spid/acs
+    /// POST /cie/acs
     [AllowAnonymous]
     [HttpPost("acs")]
     public async Task<IActionResult> AssertionConsumerService(string provider)
@@ -95,8 +92,8 @@ public class FederatedAuthController : Controller
 
     // ─── Logout ───────────────────────────────────────────────────────────────
 
-    /// GET /auth/spid/logout
-    /// GET /auth/cie/logout
+    /// GET /spid/logout
+    /// GET /cie/logout
     [Authorize]
     [HttpGet("logout")]
     public IActionResult Logout(string provider)
@@ -107,8 +104,8 @@ public class FederatedAuthController : Controller
         return authProvider.StartLogout(User);
     }
 
-    /// POST+GET /auth/spid/slo-callback
-    /// POST+GET /auth/cie/slo-callback
+    /// POST+GET /spid/slo-callback
+    /// POST+GET /cie/slo-callback
     [AllowAnonymous]
     [HttpGet("slo-callback")]
     [HttpPost("slo-callback")]
@@ -123,8 +120,8 @@ public class FederatedAuthController : Controller
 
     // ─── Metadata ─────────────────────────────────────────────────────────────
 
-    /// GET /auth/spid/metadata
-    /// GET /auth/cie/metadata
+    /// GET /spid/metadata
+    /// GET /cie/metadata
     [AllowAnonymous]
     [HttpGet("metadata")]
     [Produces("application/xml")]

@@ -30,11 +30,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
 
     public string ProviderName => "SPID";
 
-    public SpidAuthProvider(
-        IOptions<SpidConfig> config,
-        IHttpContextAccessor httpContextAccessor,
-        IMemoryCache cache
-         )
+    public SpidAuthProvider(IOptions<SpidConfig> config, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
     {
         _config = config.Value;
         _httpContextAccessor = httpContextAccessor;
@@ -44,7 +40,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
 
     // ─── Login ────────────────────────────────────────────────────────────────
     public IActionResult StartLogin(string returnUrl, string? idpEntityId = null)
-    {        
+    {
         var idp = SetSelectedIdp(idpEntityId ?? "");
 
         // Verifica che l'IdP sia configurato correttamente
@@ -93,7 +89,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
     {
         var samlConfig = BuildSamlConfig();
         var samlResponse = new Saml2AuthnResponse(samlConfig);
-        
+
         try
         {
             // ✅ Pattern ufficiale 4.x
@@ -103,7 +99,22 @@ public class SpidAuthProvider : IFederatedAuthProvider
             httpRequest.Binding.ReadSamlResponse(httpRequest, samlResponse);
 
             if (samlResponse.Status != Saml2StatusCodes.Success)
-                return Fail($"SPID errore stato: {samlResponse.Status}");
+            {
+                // Logga il messaggio esteso per capire la causa
+                var statusMessage = samlResponse.StatusMessage ?? "nessun messaggio";
+                //var statusDetail = samlResponse. ?? "nessun dettaglio";
+
+                //_logger.LogWarning(
+                //    "SPID errore — Status: {Status} | Message: {Message} | Detail: {Detail}",
+                //    samlResponse.Status,
+                //    statusMessage,
+                //    statusDetail);
+
+                return Fail($"SPID errore: {samlResponse.Status} — {statusMessage}");
+            }
+
+            //if (samlResponse.Status != Saml2StatusCodes.Success)
+            //    return Fail($"SPID errore stato: {samlResponse.Status}");
 
             // 2. Valida firma e asserzioni
             httpRequest.Binding.Unbind(httpRequest, samlResponse);
@@ -147,8 +158,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
 
     // ─── Logout ───────────────────────────────────────────────────────────────
     public IActionResult StartLogout(System.Security.Claims.ClaimsPrincipal user)
-    {
-        //var samlConfig = BuildSamlConfig(_config.IdentityProviders.FirstOrDefault());
+    {     
         var samlConfig = BuildSamlConfig();
 
         var binding = new Saml2RedirectBinding();
@@ -175,59 +185,59 @@ public class SpidAuthProvider : IFederatedAuthProvider
         var certBase64 = Convert.ToBase64String(samlConfig.SigningCertificate.RawData);
 
         var xml = $@"<?xml version=""1.0"" encoding=""UTF-8""?>
-<md:EntityDescriptor
-    xmlns:md=""urn:oasis:names:tc:SAML:2.0:metadata""
-    xmlns:ds=""http://www.w3.org/2000/09/xmldsig#""
-    xmlns:spid=""https://spid.gov.it/saml-extensions""
-    entityID=""{_config.Issuer}"">
+                        <md:EntityDescriptor
+                            xmlns:md=""urn:oasis:names:tc:SAML:2.0:metadata""
+                            xmlns:ds=""http://www.w3.org/2000/09/xmldsig#""
+                            xmlns:spid=""https://spid.gov.it/saml-extensions""
+                            entityID=""{_config.Issuer}"">
 
-  <md:SPSSODescriptor
-      protocolSupportEnumeration=""urn:oasis:names:tc:SAML:2.0:protocol""
-      AuthnRequestsSigned=""true""
-      WantAssertionsSigned=""true"">
+                          <md:SPSSODescriptor
+                              protocolSupportEnumeration=""urn:oasis:names:tc:SAML:2.0:protocol""
+                              AuthnRequestsSigned=""true""
+                              WantAssertionsSigned=""true"">
 
-    <md:KeyDescriptor use=""signing"">
-      <ds:KeyInfo>
-        <ds:X509Data>
-          <ds:X509Certificate>{certBase64}</ds:X509Certificate>
-        </ds:X509Data>
-      </ds:KeyInfo>
-    </md:KeyDescriptor>
+                            <md:KeyDescriptor use=""signing"">
+                              <ds:KeyInfo>
+                                <ds:X509Data>
+                                  <ds:X509Certificate>{certBase64}</ds:X509Certificate>
+                                </ds:X509Data>
+                              </ds:KeyInfo>
+                            </md:KeyDescriptor>
 
-    <md:AssertionConsumerService
-        Binding=""urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST""
-        Location=""{_config.AssertionConsumerServiceUrl}""
-        index=""0""
-        isDefault=""true""/>
+                            <md:AssertionConsumerService
+                                Binding=""urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST""
+                                Location=""{_config.AssertionConsumerServiceUrl}""
+                                index=""0""
+                                isDefault=""true""/>
 
-    <md:AttributeConsumingService index=""0"">
-      <md:ServiceName xml:lang=""it"">MyApp</md:ServiceName>
-      <md:RequestedAttribute Name=""spidCode""     NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
-      <md:RequestedAttribute Name=""fiscalNumber"" NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
-      <md:RequestedAttribute Name=""name""         NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
-      <md:RequestedAttribute Name=""familyName""   NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
-      <md:RequestedAttribute Name=""dateOfBirth""  NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
-      <md:RequestedAttribute Name=""email""        NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""false""/>
-    </md:AttributeConsumingService>
+                            <md:AttributeConsumingService index=""0"">
+                              <md:ServiceName xml:lang=""it"">MyApp</md:ServiceName>
+                              <md:RequestedAttribute Name=""spidCode""     NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
+                              <md:RequestedAttribute Name=""fiscalNumber"" NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
+                              <md:RequestedAttribute Name=""name""         NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
+                              <md:RequestedAttribute Name=""familyName""   NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
+                              <md:RequestedAttribute Name=""dateOfBirth""  NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""true""/>
+                              <md:RequestedAttribute Name=""email""        NameFormat=""urn:oasis:names:tc:SAML:2.0:attrname-format:basic"" isRequired=""false""/>
+                            </md:AttributeConsumingService>
 
-  </md:SPSSODescriptor>
+                          </md:SPSSODescriptor>
 
-  <!-- Obbligatorio per SPID -->
-  <md:Organization>
-    <md:OrganizationName xml:lang=""it"">MyOrg</md:OrganizationName>
-    <md:OrganizationDisplayName xml:lang=""it"">MyOrg</md:OrganizationDisplayName>
-    <md:OrganizationURL xml:lang=""it"">{_config.Issuer}</md:OrganizationURL>
-  </md:Organization>
+                          <!-- Obbligatorio per SPID -->
+                          <md:Organization>
+                            <md:OrganizationName xml:lang=""it"">MyOrg</md:OrganizationName>
+                            <md:OrganizationDisplayName xml:lang=""it"">MyOrg</md:OrganizationDisplayName>
+                            <md:OrganizationURL xml:lang=""it"">{_config.Issuer}</md:OrganizationURL>
+                          </md:Organization>
 
-  <md:ContactPerson contactType=""other"">
-    <md:Extensions>
-      <spid:IPACode>IT12345678901</spid:IPACode>
-      <spid:Private/>
-    </md:Extensions>
-    <md:EmailAddress>admin@myorg.it</md:EmailAddress>
-  </md:ContactPerson>
+                          <md:ContactPerson contactType=""other"">
+                            <md:Extensions>
+                              <spid:IPACode>IT12345678901</spid:IPACode>
+                              <spid:Private/>
+                            </md:Extensions>
+                            <md:EmailAddress>admin@myorg.it</md:EmailAddress>
+                          </md:ContactPerson>
 
-</md:EntityDescriptor>";
+                        </md:EntityDescriptor>";
 
         return new ContentResult
         {
@@ -259,8 +269,8 @@ public class SpidAuthProvider : IFederatedAuthProvider
             //---------------------------------------
             //Aggiungo demo per debug
             //---------------------------------------
-            var idpsDemo = _config.IdentityProvidersDemo.ToList();                  
-            foreach(var d in idpsDemo)
+            var idpsDemo = _config.IdentityProvidersDemo.ToList();
+            foreach (var d in idpsDemo)
             {
                 if (d != null)
                 {
@@ -295,60 +305,50 @@ public class SpidAuthProvider : IFederatedAuthProvider
     {
         var result = new List<SpidIdPConfig>();
 
-        try
+
+        var entries = System.Text.Json.JsonSerializer.Deserialize<List<AgIdIdpEntry>>(json,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        if (entries is null) return result;
+
+        foreach (var entry in entries)
         {
-            var entries = System.Text.Json.JsonSerializer.Deserialize<List<AgIdIdpEntry>>(json,
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            // Prendi l'URL SSO con binding HTTP-Redirect (preferito per SPID)
+            var ssoRedirect = entry.SingleSignOnService?
+                .FirstOrDefault(s => s.Binding?.Contains("HTTP-Redirect") == true);
 
-            if (entries is null) return result;
+            var ssoPost = entry.SingleSignOnService?
+                .FirstOrDefault(s => s.Binding?.Contains("HTTP-POST") == true);
 
-            foreach (var entry in entries)
+            var ssoUrl = ssoRedirect?.Location ?? ssoPost?.Location;
+
+            // Prendi l'URL SLO
+            var sloUrl = entry.SingleLogoutService?
+                .FirstOrDefault()?.Location;
+
+            if (string.IsNullOrEmpty(entry.EntityId) ||
+                string.IsNullOrEmpty(ssoUrl))
+                continue;
+
+            result.Add(new SpidIdPConfig
             {
-                // Prendi l'URL SSO con binding HTTP-Redirect (preferito per SPID)
-                var ssoRedirect = entry.SingleSignOnService?
-                    .FirstOrDefault(s => s.Binding?.Contains("HTTP-Redirect") == true);
-
-                var ssoPost = entry.SingleSignOnService?
-                    .FirstOrDefault(s => s.Binding?.Contains("HTTP-POST") == true);
-
-                var ssoUrl = ssoRedirect?.Location ?? ssoPost?.Location;
-
-                // Prendi l'URL SLO
-                var sloUrl = entry.SingleLogoutService?
-                    .FirstOrDefault()?.Location;
-
-                if (string.IsNullOrEmpty(entry.EntityId) ||
-                    string.IsNullOrEmpty(ssoUrl))
-                    continue;
-
-                result.Add(new SpidIdPConfig
-                {
-                    Name = entry.OrganizationName ?? entry.EntityId,
-                    EntityId = entry.EntityId,
-                    SsoUrl = ssoUrl,
-                    SloUrl = sloUrl ?? ssoUrl,
-                    MetadataUrl = $"{entry.EntityId}/metadata",
-                    LogoUrl = entry.LogoUri ?? string.Empty,
-                    IdpCertificateBase64 = entry.signing_certificate_x509.First()
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            //_logger.LogError(ex, "Errore parsing risposta registro AgID");
+                Name = entry.OrganizationName ?? entry.EntityId,
+                EntityId = entry.EntityId,
+                SsoUrl = ssoUrl,
+                SloUrl = sloUrl ?? ssoUrl,
+                MetadataUrl = $"{entry.EntityId}/metadata",
+                LogoUrl = entry.LogoUri ?? string.Empty,
+                IdpCertificateBase64 = entry.signing_certificate_x509.First()
+            });
         }
 
         return result;
     }
 
     // ─── Helper ───────────────────────────────────────────────────────────────
-    private Saml2Configuration BuildSamlConfig(SpidIdPConfig? spidIdPConfig = null) //(string? ssoUrl = null, string? sloUrl = null)
-    {
-        var certPath = Path.Combine(AppContext.BaseDirectory, _config.CertificatePath);
-        var cert = X509CertificateLoader.LoadPkcs12FromFile(
-            certPath,
-            _config.CertificatePassword,
-            X509KeyStorageFlags.MachineKeySet);
+    private Saml2Configuration BuildSamlConfig() 
+    {        
+        var cert = CertificateHelper.Get(_config);
 
         var cfg = new Saml2Configuration
         {
@@ -364,8 +364,9 @@ public class SpidAuthProvider : IFederatedAuthProvider
 
         cfg.AllowedAudienceUris.Add(_config.Issuer);
 
-        spidIdPConfig = GetSelectedIdp();       
-         
+
+        SpidIdPConfig spidIdPConfig = GetSelectedIdp();
+
         // Assegna esplicitamente con controllo
         if (!string.IsNullOrWhiteSpace(spidIdPConfig.SsoUrl))
             cfg.SingleSignOnDestination = new Uri(spidIdPConfig.SsoUrl, UriKind.Absolute);
@@ -375,7 +376,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
 
         // Certificato IdP
         if (!string.IsNullOrEmpty(spidIdPConfig.IdpCertificateBase64))
-        {       
+        {
             var certBytes = Convert.FromBase64String(spidIdPConfig.IdpCertificateBase64);
             var idpCert = X509CertificateLoader.LoadCertificate(certBytes);
             cfg.SignatureValidationCertificates.Add(idpCert);
@@ -388,7 +389,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
         new() { Success = false, ErrorMessage = message };
 
 
-    private SpidIdPConfig  SetSelectedIdp(string entityId)
+    private SpidIdPConfig SetSelectedIdp(string entityId)
     {
         var providers = GetSpidProviders().GetAwaiter().GetResult();
         var idp = providers.FirstOrDefault(t => t.EntityId == entityId);
@@ -402,7 +403,7 @@ public class SpidAuthProvider : IFederatedAuthProvider
     }
 
     private SpidIdPConfig GetSelectedIdp()
-    {    
+    {
         var idpJson = _httpContextAccessor.HttpContext!.Session.GetString("spid_idp") ?? "";
         var idp = JsonConvert.DeserializeObject<SpidIdPConfig>(idpJson);
         return idp ?? new();

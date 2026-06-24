@@ -27,7 +27,7 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.LoginPath = "/Auth/Login";
+    options.LoginPath = "/Login";
 });
 
 

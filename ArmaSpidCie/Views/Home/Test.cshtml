@@ -1,0 +1,127 @@
+﻿@{
+    ViewData["Title"] = "Accesso ai servizi";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-lg-7 col-md-9">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body p-5">
+
+                    <div class="text-center mb-5">
+
+                        <img src="~/images/logo-ente.svg"
+                             alt="Logo Ente"
+                             style="max-height:90px;" />
+
+                        <h1 class="mt-4">
+                            Accesso ai Servizi Online
+                        </h1>
+
+                        <p class="text-muted">
+                            Accedi tramite identità digitale SPID oppure
+                            Carta d'Identità Elettronica.
+                        </p>
+
+                    </div>
+
+                    <!-- SPID -->
+
+                    <div class="mb-4">
+
+                        <h5 class="mb-3">
+                          Accedi con SPID
+                        </h5>
+
+                        <div class="dropdown w-100">
+
+                            <button class="btn btn-primary btn-lg w-100 dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                     <span><img src="https://auth.gse.it/nac2login/images/spid-ico-circle-bb.svg" style="width: 25px; margin-right: 50px;"  /></span> 
+                                <strong>Entra con SPID</strong>
+                            </button>
+
+                            <ul class="dropdown-menu w-100">
+
+                                @foreach (var idp in Model.IdentityProviders)
+                                {
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="@Url.Action("LoginSpid",
+                                                             "Auth",
+                                                             new { idp = idp.EntityId })">
+
+                                            <img src="@idp.Logo"
+                                                 style="height:24px"
+                                                 class="me-2" />
+
+                                          
+                                        </a>
+                                    </li>
+                                    <hr />
+                                }
+
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+                    <!-- CIE -->
+
+                    <div class="mb-4">
+
+                        <h5 class="mb-3">
+                            Accedi con Carta d'Identità Elettronica
+                        </h5>
+
+                        <a asp-controller="Auth"
+                           asp-action="LoginCie"
+                           class="btn btn-outline-primary btn-lg w-100">
+
+                            Entra con CIE
+                        </a>
+
+                    </div>
+
+                    <hr />
+
+                    <div class="small text-muted">
+
+                        L'autenticazione viene effettuata tramite i
+                        sistemi ufficiali SPID e CIE.
+
+                        <br /><br />
+
+                        Per maggiori informazioni:
+
+                        <ul class="mt-2">
+                            <li>
+                                <a href="https://www.spid.gov.it"
+                                   target="_blank">
+                                    SPID
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://www.cartaidentita.interno.gov.it"
+                                   target="_blank">
+                                    Carta d'Identità Elettronica
+                                </a>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
